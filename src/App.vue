@@ -104,7 +104,7 @@ export default {
       this.saveStudentAnswers();
     },
     finishQuiz() {
-      alert('Quiz finalizado! Suas respostas foram salvas.');
+      alert('Prova finalizada! Suas respostas foram salvas.');
     },
     logout() {
       this.currentStudent = null;
