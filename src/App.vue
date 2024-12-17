@@ -18,9 +18,6 @@
             {{ option.text }}
           </button>
         </div>
-        <p v-if="studentAnswers[question.id] !== undefined">
-          {{ studentAnswers[question.id].isCorrect ? 'Resposta correta!' : 'Resposta errada!' }}
-        </p>
       </div>
       <button v-if="allQuestionsAnswered" @click="finishQuiz">Finalizar Prova</button>
       <button @click="logout">Trocar de Aluno</button>
@@ -105,6 +102,7 @@ export default {
     },
     finishQuiz() {
       alert('Prova finalizada! Suas respostas foram salvas.');
+      this.downloadAnswersAsJson();
     },
     logout() {
       this.currentStudent = null;
@@ -112,9 +110,22 @@ export default {
       this.studentAnswers = {};
       localStorage.removeItem('currentStudent');
     },
+    downloadAnswersAsJson() {
+      const fileName = `${this.currentStudent}_respostas.json`;
+      const dataToDownload = {
+        studentName: this.currentStudent, // Inclui o nome do aluno
+        answers: this.studentAnswers,     // Inclui as respostas
+      };
+      const jsonBlob = new Blob([JSON.stringify(dataToDownload, null, 2)], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(jsonBlob);
+      link.download = fileName;
+      link.click();
+    }
   },
 };
 </script>
+
 
 <style>
 #app {
