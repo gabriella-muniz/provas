@@ -3,7 +3,7 @@
     <div v-if="!currentStudent">
       <h1>Identifique-se</h1>
       <input v-model="studentName" placeholder="Digite seu nome" />
-      <button @click="startQuiz">Iniciar Quiz</button>
+      <button @click="startQuiz">Iniciar Prova</button>
     </div>
     <div v-else>
       <h1>Quiz: Responda às questões</h1>
@@ -57,6 +57,7 @@ export default {
     };
   },
   computed: {
+     // Verifica se todas as perguntas foram respondidas
     allQuestionsAnswered() {
       return Object.keys(this.studentAnswers).length === this.questions.length;
     },
@@ -65,6 +66,7 @@ export default {
     this.loadCurrentStudent();
   },
   methods: {
+    // Carrega o aluno atual se já estiver salvo
     loadCurrentStudent() {
       const savedStudent = localStorage.getItem('currentStudent');
       if (savedStudent) {
@@ -73,6 +75,7 @@ export default {
       }
     },
     startQuiz() {
+         // Inicia o quiz com o nome do aluno
       if (this.studentName.trim() === '') {
         alert('Por favor, digite seu nome.');
         return;
@@ -82,6 +85,7 @@ export default {
       this.loadStudentAnswers(this.currentStudent);
     },
     loadStudentAnswers(student) {
+      // Carrega as respostas salvas do aluno
       const savedAnswers = localStorage.getItem(`answers_${student}`);
       if (savedAnswers) {
         this.studentAnswers = JSON.parse(savedAnswers);
@@ -90,26 +94,31 @@ export default {
       }
     },
     saveStudentAnswers() {
+      // Salva as respostas do aluno no localStorage
       localStorage.setItem(
         `answers_${this.currentStudent}`,
         JSON.stringify(this.studentAnswers)
       );
     },
     checkAnswer(question, option) {
+      // Verifica se a resposta está correta
       const isCorrect = option.id === question.correctAnswer;
       this.studentAnswers[question.id] = { selected: option.id, isCorrect };
       this.saveStudentAnswers();
     },
+    // Finaliza a prova e faz o download das respostas
     finishQuiz() {
       alert('Prova finalizada! Suas respostas foram salvas.');
       this.downloadAnswersAsJson();
     },
+    // Permite trocar de aluno
     logout() {
       this.currentStudent = null;
       this.studentName = '';
       this.studentAnswers = {};
       localStorage.removeItem('currentStudent');
     },
+     // Gera o arquivo JSON com as respostas e faz o download
     downloadAnswersAsJson() {
       const fileName = `${this.currentStudent}_respostas.json`;
       const dataToDownload = {
