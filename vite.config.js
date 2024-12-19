@@ -32,6 +32,7 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,png,jpg,svg}"], // Arquivos para cache
         skipWaiting: true, // Força o novo SW a assumir o controle
         clientsClaim: true, // Atualiza clientes imediatamente
+        maximumFileSizeToCacheInBytes: 50 * 1024 * 1024, // Atualiza clientes imediatamente
       },
     }),    
   ],

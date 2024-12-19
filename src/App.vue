@@ -1,27 +1,122 @@
 <template>
-  <div id="app">
-    <div v-if="!currentStudent">
-      <h1>Identifique-se</h1>
-      <input v-model="studentName" placeholder="Digite seu nome" />
-      <button @click="startQuiz">Iniciar Prova</button>
-    </div>
-    <div v-else>
-      <h1>Quiz: Responda às questões</h1>
-      <h2>Aluno: {{ currentStudent }}</h2>
-      <div v-for="(question, index) in questions" :key="question.id" class="question">
-        <h2>{{ index + 1 }}. {{ question.text }}</h2>
-        <div v-for="option in question.options" :key="option.id">
-          <button 
-            :class="{ selected: studentAnswers[question.id]?.selected === option.id }"
-            :disabled="studentAnswers[question.id] !== undefined"
-            @click="checkAnswer(question, option)">
-            {{ option.text }}
+  <div id="app" class="min-h-screen bg-gray-100">
+    <header v-if="currentStudent" class="bg-white shadow p-4 flex justify-between items-center">
+      <div>
+        <h1 class="text-xl font-font">{{ schoolName }}</h1>
+        <p class="text-gray-600 font-font">{{ className }}</p>
+      </div>
+      <div>
+        <p class="text-gray-700 font-font">{{ currentStudent }}</p>
+      </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto my-6 bg-white p-6">
+      <div v-if="!currentStudent">
+        <h2 class="text-xl mb-4 font-font">Identifique-se</h2>
+        <div class="mb-4">
+          <label class="block text-gray-700">Nome da Escola</label>
+          <input
+            v-model="schoolName"
+            placeholder="Digite o nome da escola"
+            class="w-full p-2 border border-gray-300 rounded mb-4"
+          />
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-gray-700">Turma</label>
+          <input
+            v-model="className"
+            placeholder="Digite a turma"
+            class="w-full p-2 border border-gray-300 rounded mb-4"
+          />
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-gray-700">Nome do Aluno</label>
+          <input
+            v-model="studentName"
+            placeholder="Digite o nome do aluno"
+            class="w-full p-2 border border-gray-300 rounded mb-4"
+          />
+        </div>
+
+        <button
+          @click="startQuiz"
+          class="w-full bg-[#1134d5] text-white font-semibold py-2 px-4 rounded hover:bg-blue-600"
+        >
+          Iniciar Prova
+        </button>
+      </div>
+
+      <div v-else>
+        <div>
+          <!-- Colocando o texto primeiro -->
+          <h2 class="text-lg font-bold mb-4 font-font">{{ currentQuestion.subject }} - Questão {{ currentQuestionIndex + 1 }}/{{ questions.length }}</h2>
+          <h3 class="mb-4 font-font">{{ currentQuestion.text }}</h3>
+          
+          <!-- Imagem logo depois do texto -->
+          <img
+            v-if="currentQuestion.image"
+            :src="currentQuestion.image"
+            alt="Imagem da questão"
+            class="max-w-xs h-auto mb-4 rounded"
+          />
+
+          <!-- Texto adicional após a imagem -->
+          <h3 class="mb-4 font-font">{{ currentQuestion.extraText }}</h3>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div v-for="(option, index) in currentQuestion.options" :key="option.id">
+              <button
+                :class="[ 
+                  'w-full text-left p-2 rounded border', 
+                  studentAnswers[currentQuestion.id]?.selected === option.id
+                    ? 'bg-blue-100 border-blue-500'
+                    : 'bg-white border-gray-300' 
+                ]"
+                :disabled="studentAnswers[currentQuestion.id] !== undefined"
+                @click="checkAnswer(currentQuestion, option)"
+              >
+                {{ option.id }}. {{ option.text }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-between mt-6">
+          <button
+            @click="previousQuestion"
+            :disabled="currentQuestionIndex === 0"
+            class="bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400 disabled:opacity-50"
+          >
+            Questão Anterior
+          </button>
+          <button
+            @click="nextQuestion"
+            :disabled="currentQuestionIndex === questions.length - 1"
+            class="bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400 disabled:opacity-50"
+          >
+            Próxima Questão
+          </button>
+        </div>
+
+        <div class="mt-6">
+          <button
+            v-if="allQuestionsAnswered"
+            @click="finishQuiz"
+            class="w-full bg-green-500 text-white font-semibold py-2 px-4 rounded hover:bg-green-600"
+          >
+            Finalizar Prova
+          </button>
+          <button
+            @click="logout"
+            class="w-full mt-2 bg-red-500 text-white font-semibold py-2 px-4 rounded hover:bg-red-600"
+          >
+            Trocar de Aluno
           </button>
         </div>
       </div>
-      <button v-if="allQuestionsAnswered" @click="finishQuiz">Finalizar Prova</button>
-      <button @click="logout">Trocar de Aluno</button>
-    </div>
+    </main>
   </div>
 </template>
 
@@ -29,150 +124,119 @@
 export default {
   data() {
     return {
+      schoolName: '',
+      className: '',
       studentName: '',
-      currentStudent: null, // Identifica o aluno atual
+      currentStudent: null,
+      currentQuestionIndex: 0,
       questions: [
         {
           id: 1,
-          text: 'Qual é a capital do Brasil?',
+          subject: 'Ciências',
+          text: 'A Acústica é a ciência que estuda o som e suas características, como intensidade, altura ou timbre. A imagem representa uma dessas características.',
+          extraText: 'Sobre a situação apresentada, pode-se concluir que ela ocorre porque:',
           options: [
-            { id: 1, text: 'São Paulo' },
-            { id: 2, text: 'Brasília' },
-            { id: 3, text: 'Rio de Janeiro' },
+            { id: 'A', text: 'As vibrações da guitarra são lentas.' },
+            { id: 'B', text: 'A intensidade do som produzido é forte.' },
+            { id: 'C', text: 'O som produzido pela guitarra está alto.' },
+            { id: 'D', text: 'O timbre produzido pela guitarra é intenso.' },
           ],
-          correctAnswer: 2,
+          correctAnswer: 'B',
+          comments: 'BNCC: EF03CI01 - A questão avalia a habilidade de interpretar as propriedades do som.',
+          image: '/img-question.png',  // Caminho para a imagem
         },
         {
           id: 2,
-          text: 'Qual é a capital da França?',
+          subject: 'Matemática',
+          text: 'João tem 3 caixas com 12 lápis em cada uma. Quantos lápis João tem ao todo?',
+          extraText: 'Quantos lápis João tem ao todo?',
           options: [
-            { id: 1, text: 'Berlim' },
-            { id: 2, text: 'Madri' },
-            { id: 3, text: 'Paris' },
+            { id: 'A', text: '36' },
+            { id: 'B', text: '24' },
+            { id: 'C', text: '30' },
+            { id: 'D', text: '40' },
           ],
-          correctAnswer: 3,
+          correctAnswer: 'A',
+          comments: 'BNCC: EF02MA03 - A questão avalia a habilidade de resolver problemas de multiplicação simples.',
+     
         },
       ],
-      studentAnswers: {}, // Respostas do aluno atual
+      studentAnswers: {},
     };
   },
   computed: {
-     // Verifica se todas as perguntas foram respondidas
+    currentQuestion() {
+      return this.questions[this.currentQuestionIndex];
+    },
     allQuestionsAnswered() {
       return Object.keys(this.studentAnswers).length === this.questions.length;
     },
   },
-  mounted() {
-    this.loadCurrentStudent();
-  },
   methods: {
-    // Carrega o aluno atual se já estiver salvo
-    loadCurrentStudent() {
-      const savedStudent = localStorage.getItem('currentStudent');
-      if (savedStudent) {
-        this.currentStudent = savedStudent;
-        this.loadStudentAnswers(savedStudent);
-      }
-    },
     startQuiz() {
-         // Inicia o quiz com o nome do aluno
-      if (this.studentName.trim() === '') {
-        alert('Por favor, digite seu nome.');
+      if (this.schoolName.trim() === '' || this.className.trim() === '' || this.studentName.trim() === '') {
+        alert('Por favor, preencha todos os campos.');
         return;
       }
       this.currentStudent = this.studentName.trim();
       localStorage.setItem('currentStudent', this.currentStudent);
+      localStorage.setItem('schoolName', this.schoolName);
+      localStorage.setItem('className', this.className);
       this.loadStudentAnswers(this.currentStudent);
     },
     loadStudentAnswers(student) {
-      // Carrega as respostas salvas do aluno
       const savedAnswers = localStorage.getItem(`answers_${student}`);
-      if (savedAnswers) {
-        this.studentAnswers = JSON.parse(savedAnswers);
-      } else {
-        this.studentAnswers = {};
-      }
+      this.studentAnswers = savedAnswers ? JSON.parse(savedAnswers) : {};
     },
     saveStudentAnswers() {
-      // Salva as respostas do aluno no localStorage
       localStorage.setItem(
         `answers_${this.currentStudent}`,
         JSON.stringify(this.studentAnswers)
       );
     },
     checkAnswer(question, option) {
-      // Verifica se a resposta está correta
       const isCorrect = option.id === question.correctAnswer;
       this.studentAnswers[question.id] = { selected: option.id, isCorrect };
       this.saveStudentAnswers();
     },
-    // Finaliza a prova e faz o download das respostas
     finishQuiz() {
       alert('Prova finalizada! Suas respostas foram salvas.');
       this.downloadAnswersAsJson();
     },
-    // Permite trocar de aluno
-    logout() {
-      this.currentStudent = null;
-      this.studentName = '';
-      this.studentAnswers = {};
-      localStorage.removeItem('currentStudent');
-    },
-     // Gera o arquivo JSON com as respostas e faz o download
     downloadAnswersAsJson() {
       const fileName = `${this.currentStudent}_respostas.json`;
       const dataToDownload = {
-        studentName: this.currentStudent, // Inclui o nome do aluno
-        answers: this.studentAnswers,     // Inclui as respostas
+        schoolName: this.schoolName,
+        className: this.className,
+        studentName: this.currentStudent,
+        answers: this.studentAnswers,
       };
       const jsonBlob = new Blob([JSON.stringify(dataToDownload, null, 2)], { type: 'application/json' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(jsonBlob);
       link.download = fileName;
       link.click();
-    }
+    },
+    logout() {
+      this.currentStudent = null;
+      this.schoolName = '';
+      this.className = '';
+      this.studentName = '';
+      this.studentAnswers = {};
+      localStorage.removeItem('currentStudent');
+      localStorage.removeItem('schoolName');
+      localStorage.removeItem('className');
+    },
+    nextQuestion() {
+      if (this.currentQuestionIndex < this.questions.length - 1) {
+        this.currentQuestionIndex++;
+      }
+    },
+    previousQuestion() {
+      if (this.currentQuestionIndex > 0) {
+        this.currentQuestionIndex--;
+      }
+    },
   },
 };
 </script>
-
-
-<style>
-#app {
-  text-align: center;
-  padding: 20px;
-  font-family: Arial, sans-serif;
-}
-
-input {
-  margin: 10px;
-  padding: 10px;
-  font-size: 16px;
-  width: 250px;
-}
-
-button {
-  margin: 10px;
-  padding: 10px;
-  font-size: 18px;
-  cursor: pointer;
-}
-
-button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-h1, h2 {
-  color: #333;
-}
-
-.question {
-  margin: 20px 0;
-}
-
-.selected {
-  background-color: #4caf50;
-  color: white;
-}
-</style>
-
