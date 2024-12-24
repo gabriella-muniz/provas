@@ -15,9 +15,13 @@
 
     <main class="max-w-4xl mx-auto my-6 bg-white p-6">
       <div v-if="!currentStudent">
-        <h1 class="text-xl mb-4 font-font text-center font-bold tracking-wider">Identifique-se</h1>
+        <h1 class="text-xl mb-4 font-font text-center font-bold tracking-wider">
+          Identifique-se
+        </h1>
         <div class="mb-4">
-          <label class="font-font block text-black font-bold tracking-wide">Nome da Escola:</label>
+          <label class="font-font block text-black font-bold tracking-wide"
+            >Nome da Escola:</label
+          >
           <input
             v-model="schoolName"
             placeholder="Digite o nome da escola"
@@ -26,7 +30,9 @@
         </div>
 
         <div class="mb-4">
-          <label class=" font-font block text-black font-bold tracking-wide">Turma:</label>
+          <label class="font-font block text-black font-bold tracking-wide"
+            >Turma:</label
+          >
           <input
             v-model="className"
             placeholder="Digite a turma"
@@ -35,7 +41,9 @@
         </div>
 
         <div class="mb-4">
-          <label class="font-font block text-black font-bold tracking-wide">Nome do Aluno:</label>
+          <label class="font-font block text-black font-bold tracking-wide"
+            >Nome do Aluno:</label
+          >
           <input
             v-model="studentName"
             placeholder="Digite o nome do aluno"
@@ -52,13 +60,34 @@
       </div>
 
       <div v-else>
-        <!-- Colocando o texto primeiro -->
+        <!-- Sumário -->
+        <div class="mb-6">
+          <div class="flex flex-wrap justify-center gap-2">
+            <button
+              v-for="(question, index) in questions"
+              :key="question.id"
+              @click="goToQuestion(index)"
+              :class="[
+                'w-10 h-10 flex items-center justify-center rounded-full text-white font-bold',
+                studentAnswers[question.id]?.confirmed
+                  ? 'bg-green-500'
+                  : 'bg-gray-300',
+              ]"
+            >
+              {{ index + 1 }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Exibição das questões -->
         <div>
           <h2 class="text-lg font-bold mb-4 font-font tracking-wider">
             {{ currentQuestion.subject }} - Questão
             {{ currentQuestionIndex + 1 }}/{{ questions.length }}
           </h2>
-          <h3 class="mb-4 font-font tracking-wide">{{ currentQuestion.text }}</h3>
+          <h3 class="mb-4 font-font tracking-wide">
+            {{ currentQuestion.text }}
+          </h3>
           <!-- imagem depois do texto-->
           <img
             v-if="currentQuestion.image"
@@ -67,7 +96,9 @@
             class="max-w-xs h-auto mb-4 rounded"
           />
           <!-- Texto adicional após a imagem -->
-          <h3 class="mb-4 font-font tracking-wide">{{ currentQuestion.extraText }}</h3>
+          <h3 class="mb-4 font-font tracking-wide">
+            {{ currentQuestion.extraText }}
+          </h3>
 
           <div class="grid grid-cols-2 gap-4 font-font tracking-wide">
             <div
@@ -107,7 +138,7 @@
                   : 'bg-blue-500 hover:bg-blue-600 text-white',
               ]"
             >
-              <!-- Ícone de check quando a questão estiver respondida -->
+             <!-- Ícone de check quando a questão estiver respondida -->
               <span
                 v-if="studentAnswers[currentQuestion.id]?.confirmed"
                 class="mr-2"
@@ -297,15 +328,11 @@ export default {
         this.currentQuestionIndex--;
       }
     },
-  },
-  mounted() {
-    const student = localStorage.getItem("currentStudent");
-    if (student) {
-      this.currentStudent = student;
-      this.schoolName = localStorage.getItem("schoolName");
-      this.className = localStorage.getItem("className");
-      this.loadStudentAnswers(student);
-    }
+    goToQuestion(index) {
+      this.currentQuestionIndex = index;
+    },
   },
 };
 </script>
+
+
